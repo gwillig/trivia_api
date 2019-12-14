@@ -4,15 +4,15 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
 
-from models import setup_db, Question, Category
+from backend.models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
 
 def create_app(test_config=None):
   # create and configure the app
   app = Flask(__name__)
-  setup_db(app)
-  
+  db = setup_db(app)
+
   '''
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
   '''
@@ -101,4 +101,8 @@ def create_app(test_config=None):
   
   return app
 
+
+if __name__=="__main__":
+  app = create_app()
+  app.run(debug=True, host='0.0.0.0', port=5000)
     
