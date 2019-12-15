@@ -8,27 +8,63 @@ from backend.models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
 
+
 def create_app(test_config=None):
-  # create and configure the app
-  app = Flask(__name__)
-  db = setup_db(app)
+    # create and configure the app
+    app = Flask(__name__)
 
-  '''
-  @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
-  '''
+    db = setup_db(app)
+    '1.Step: config cors'
+    CORS(app)
+    cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
-  '''
-  @TODO: Use the after_request decorator to set Access-Control-Allow
-  '''
+    @app.route("/questions")
+    def get_questions():
+        start_page = request.args.get('page', 1, type=int)
+        end_page = start_page + QUESTIONS_PER_PAGE
+        print("#"*15)
+        print(start_page)
+        print("#" * 15)
 
-  '''
+        try:
+            all_questions = db.session.query(Question).order_by(Question.id).offset(start_page).limit(QUESTIONS_PER_PAGE).all()
+            all_questions_list = [el.format() for el in all_questions]
+            total_questions =  db.session.query(Question).order_by(Question.id).count()
+            ## Get all categories
+            all_categories_dict ={}
+            all_categories = db.session.query(Category).all()
+            for el in all_categories:
+                all_categories_dict[el.id] = el.type
+        except:
+            db.session.rollback()
+            abort(400)
+        finally:
+            db.session.close()
+        return jsonify(
+            {'success': True,
+            'questions': all_questions_list,
+            'categories': all_categories_dict,
+            'total_questions':total_questions
+             }
+
+        )
+
+    @app.after_request
+    def after_request(response):
+        '''
+        Define access controll
+        '''
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+        return response
+
+    '''
   @TODO: 
   Create an endpoint to handle GET requests 
   for all available categories.
   '''
 
-
-  '''
+    '''
   @TODO: 
   Create an endpoint to handle GET requests for questions, 
   including pagination (every 10 questions). 
@@ -41,7 +77,7 @@ def create_app(test_config=None):
   Clicking on the page numbers should update the questions. 
   '''
 
-  '''
+    '''
   @TODO: 
   Create an endpoint to DELETE question using a question ID. 
 
@@ -49,7 +85,7 @@ def create_app(test_config=None):
   This removal will persist in the database and when you refresh the page. 
   '''
 
-  '''
+    '''
   @TODO: 
   Create an endpoint to POST a new question, 
   which will require the question and answer text, 
@@ -60,7 +96,7 @@ def create_app(test_config=None):
   of the questions list in the "List" tab.  
   '''
 
-  '''
+    '''
   @TODO: 
   Create a POST endpoint to get questions based on a search term. 
   It should return any questions for whom the search term 
@@ -71,7 +107,7 @@ def create_app(test_config=None):
   Try using the word "title" to start. 
   '''
 
-  '''
+    '''
   @TODO: 
   Create a GET endpoint to get questions based on category. 
 
@@ -80,8 +116,7 @@ def create_app(test_config=None):
   category to be shown. 
   '''
 
-
-  '''
+    '''
   @TODO: 
   Create a POST endpoint to get questions to play the quiz. 
   This endpoint should take category and previous question parameters 
@@ -93,16 +128,33 @@ def create_app(test_config=None):
   and shown whether they were correct or not. 
   '''
 
-  '''
-  @TODO: 
-  Create error handlers for all expected errors 
-  including 404 and 422. 
-  '''
-  
-  return app
 
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            'success':False,
+            "error":400,
+            'message':'bad request'
+        })
 
-if __name__=="__main__":
-  app = create_app()
-  app.run(debug=True, host='0.0.0.0', port=5000)
-    
+    @app.errorhandler(404)
+    def resource_not_found(error):
+        return jsonify({
+            'success':False,
+            'error':404,
+            'message':'resource not found'
+        })
+
+    @app.errorhandler(422)
+    def unprocessable(error):
+        return jsonify({
+            'success':False,
+            'error':422,
+            'message':'The server understands the content type of the request entity'
+        })
+
+    return app
+if __name__ == "__main__":
+    app = create_app()
+    app.run(debug=True)
+
