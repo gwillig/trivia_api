@@ -41,12 +41,9 @@ def create_app(test_config=None):
 
     @app.route("/questions")
     def get_questions():
-        start_page = request.args.get('page', 1, type=int)
-        end_page = start_page + QUESTIONS_PER_PAGE
-        print("#"*15)
-        print(start_page)
-        print("#" * 15)
 
+        start_page_raw = request.args.get('page', 1, type=int)
+        start_page = (start_page_raw-1) *10
         try:
             all_questions = db.session.query(Question).order_by(Question.id).offset(start_page).limit(QUESTIONS_PER_PAGE).all()
             all_questions_list = [el.format() for el in all_questions]
@@ -74,35 +71,86 @@ def create_app(test_config=None):
     def post_question():
         '''
         @description:
-            adds a new question to the database
+            adds a new question to the database or search for a question
         '''
         '#1.Step: Get all parameters for the ajax request'
-        # question = request.args.post('question', None, type=str)
-        # answer = request.args.post('answer', None, type=str)
-        # difficulty = request.args.post('difficulty',None,type=int)
-        # category = request.args.post('category', None, type=str)
+        print("post_question line 77")
         data_string = request.data
         request_dict = json.loads(data_string)
-        request_dict['id'] = None #Will be automaticlly created
 
         '#2.Step: create a new records a the database and send response back'
+
+        if request_dict['searchTerm'] == None:
+            try:
+                c1 = Question(**request_dict)
+                db.session.add(c1)
+                db.session.commit()
+                print("New question has been created")
+                print(request_dict)
+            except:
+                db.session.rollback()
+                db.session.close()
+                print('An error occur during creating of')
+                print(request_dict)
+                abort(400)
+            finally:
+                db.session.close()
+            return jsonify({
+                'success': True,
+            })
+        else:
+            ## Get all categories
+            all_categories_dict = {}
+            all_categories = db.session.query(Category).all()
+            for el in all_categories:
+                all_categories_dict[el.id] = el.type
+
+            search_term = request_dict['searchTerm']
+            print(search_term)
+            baseQuery = db.session.query(Question).filter(Question.question.like(f'%{search_term}%'))
+            result = baseQuery.all()
+            all_questions_list = [el.format() for el in result]
+            total_questions = baseQuery.count()
+
+            if total_questions == 0:
+                all_questions_list= [{'answer': 'Maya Angelou',
+                 'category': '4',
+                 'difficulty': 2,
+                 'id': 1,
+                 'question': "No hits. Please change search term"
+                                      }]
+
+
+            return jsonify({
+                'success': True,
+                'categories': all_categories_dict,
+                'questions': all_questions_list,
+                'total_questions':total_questions
+            })
+
+    @app.route('/questions/<int:question_id>', methods=['DELETE'])
+    def delete_question(question_id):
+        '''
+        @description:
+            deletes a given question from the database
+        '''
+
+        '#1.Step: Get all parameters for the ajax request'
+        print(question_id)
         try:
-            c1 = Question(**request_dict)
-            db.session.add(c1)
+            db.session.query(Question).filter_by(id=question_id).delete()
             db.session.commit()
-            print("New question has been created")
-            print(request_dict)
         except:
             db.session.rollback()
             db.session.close()
-            print('An error occur during creating of')
-            print(request_dict)
             abort(400)
         finally:
             db.session.close()
+
         return jsonify({
-            'success': True,
+            'success': True
         })
+
 
     @app.route("/categories/")
     def get_categories():
@@ -113,7 +161,7 @@ def create_app(test_config=None):
             all question for a given category
         '''
         '#1.Step: get the category id'
-        category_id = request.args.get('')
+        print("asdasdasd")
         try:
             categories_tuple = db.session.query(Category.id,Category.type).all()
             categories_dict = {key:value for key,value in categories_tuple}
@@ -131,36 +179,34 @@ def create_app(test_config=None):
             }
         )
 
-    '''
-  @TODO: 
-  Create an endpoint to POST a new question, 
-  which will require the question and answer text, 
-  category, and difficulty score.
+    @app.route('/categories/<int:category_id>/questions')
+    def get_all_question_category(category_id):
+        print(category_id)
+        # try:
+        category_type = Category.query.filter_by(id=category_id).first().format()
+        all_questions = db.session.query(Question).filter_by(category=str(category_id)).all()
+        all_questions_list = [el.format() for el in all_questions]
+        total_questions = db.session.query(Question).order_by(Question.id).count()
+        ## Get all categories
+        all_categories_dict = {}
+        all_categories = db.session.query(Category).all()
+        for el in all_categories:
+            all_categories_dict[el.id] = el.type
+        # except:
+        #     db.session.rollback()
+        #     abort(400)
+        # finally:
+        #     db.session.close()
+        return jsonify(
+            {'success': True,
+            'questions': all_questions_list,
+            'categories': all_categories_dict,
+            'total_questions':total_questions,
+             'current_category':category_type
+             }
 
-  TEST: When you submit a question on the "Add" tab, 
-  the form will clear and the question will appear at the end of the last page
-  of the questions list in the "List" tab.  
-  '''
+        )
 
-    '''
-  @TODO: 
-  Create an endpoint to DELETE question using a question ID. 
-
-  TEST: When you click the trash icon next to a question, the question will be removed.
-  This removal will persist in the database and when you refresh the page. 
-  '''
-
-
-    '''
-  @TODO: 
-  Create a POST endpoint to get questions based on a search term. 
-  It should return any questions for whom the search term 
-  is a substring of the question. 
-
-  TEST: Search by any phrase. The questions list will update to include 
-  only question that include that string within their question. 
-  Try using the word "title" to start. 
-  '''
 
     '''
   @TODO: 
