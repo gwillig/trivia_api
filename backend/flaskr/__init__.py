@@ -74,7 +74,6 @@ def create_app(test_config=None):
             adds a new question to the database or search for a question
         '''
         '#1.Step: Get all parameters for the ajax request'
-        print("post_question line 77")
         data_string = request.data
         request_dict = json.loads(data_string)
 
@@ -161,7 +160,6 @@ def create_app(test_config=None):
             all question for a given category
         '''
         '#1.Step: get the category id'
-        print("asdasdasd")
         try:
             categories_tuple = db.session.query(Category.id,Category.type).all()
             categories_dict = {key:value for key,value in categories_tuple}
@@ -207,15 +205,38 @@ def create_app(test_config=None):
 
         )
 
-
-    '''
-  @TODO: 
-  Create a GET endpoint to get questions based on category. 
-
-  TEST: In the "List" tab / main screen, clicking on one of the 
-  categories in the left column will cause only questions of that 
-  category to be shown. 
-  '''
+    @app.route('/quizzes', methods=['POST'])
+    def get_quiz_questions():
+        '''
+        @description:
+            get some randrom question
+        '''
+        '#1.Step: Get all parametres from the request'
+        data_string = request.data
+        request_dict = json.loads(data_string)
+        print(data_string)
+        question = db.session.query(Question).first()
+        '#2.1.Step: All all question if all is selected'
+        category_id = request_dict["quiz_category"]["id"]
+        category_typ = db.session.query(Category).filter_by(id=category_id).first().type
+        previous_questions = request_dict["previous_questions"]
+        if category_id==0:
+            question = db.session.query(Question).first()
+        else:
+            basequey= db.session.query(Question).filter(Question.category==str(category_id))
+            for question_id in previous_questions:
+                basequey = basequey.filter(Question.id!=str(question_id))
+            question = basequey.first()
+            if basequey.count() == 0:
+                question_raw= {'answer': 'The Liver',
+                 'category': '1',
+                 'difficulty': 4,
+                 'question': f'All available question of the {category_typ} answered. Please choice other category'}
+                question=Question(**question_raw)
+        return jsonify({
+            'success': True,
+            'question': question.format()
+        })
 
     '''
   @TODO: 
