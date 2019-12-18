@@ -2,7 +2,7 @@
 # Own Notes.
 """
 Description                         | Cmd
-to login as the right user for psql | PGUSER=test PGPASSWORD=test psql -h localhost trivia
+to login as the right user for psql | PGUSER=test PGPASSWORD=test psql -h localhost trivia_test
 Give all right to role              | GRANT ALL PRIVILEGES ON database test to test;
 adds temporary git\bit to path      | "c:\Program Files\Git\bin\sh.exe" --login
 
@@ -76,10 +76,10 @@ def create_app(test_config=None):
         '#1.Step: Get all parameters for the ajax request'
         data_string = request.data
         request_dict = json.loads(data_string)
-
+        print(request)
         '#2.Step: create a new records a the database and send response back'
 
-        if request_dict['searchTerm'] == None:
+        if not 'searchTaerm' in request_dict.keys():
             try:
                 c1 = Question(**request_dict)
                 db.session.add(c1)
@@ -231,24 +231,12 @@ def create_app(test_config=None):
                 question_raw= {'answer': 'The Liver',
                  'category': '1',
                  'difficulty': 4,
-                 'question': f'All available question of the {category_typ} answered. Please choice other category'}
+                 'question': f'All available question of the {category_typ} answered. Please choice other category.'}
                 question=Question(**question_raw)
         return jsonify({
             'success': True,
             'question': question.format()
         })
-
-    '''
-  @TODO: 
-  Create a POST endpoint to get questions to play the quiz. 
-  This endpoint should take category and previous question parameters 
-  and return a random questions within the given category, 
-  if provided, and that is not one of the previous questions. 
-
-  TEST: In the "Play" tab, after a user selects "All" or a category,
-  one question at a time is displayed, the user is allowed to answer
-  and shown whether they were correct or not. 
-  '''
 
 
     @app.errorhandler(400)

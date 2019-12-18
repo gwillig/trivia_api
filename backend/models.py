@@ -4,8 +4,8 @@ from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
 import json
 
-
-database_path = 'postgresql://test:test@localhost:15432/trivia'
+database_name = "trivia"
+database_path = 'postgresql://test:test@localhost:15432/'+database_name
 
 db = SQLAlchemy()
 
@@ -81,7 +81,8 @@ class Category(db.Model):
 
 
 def inject_data():
-    question_list = [{'answer': 'Maya Angelou',
+    question_list = [
+        {'answer': 'Maya Angelou',
                       'category': 4,
                       'difficulty': 2,
                       'id': 5,

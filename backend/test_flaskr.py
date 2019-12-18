@@ -3,8 +3,8 @@ import unittest
 import json
 from flask_sqlalchemy import SQLAlchemy
 
-from flaskr import create_app
-from models import setup_db, Question, Category
+from backend.flaskr import create_app
+from backend.models import setup_db, Question, Category
 
 
 class TriviaTestCase(unittest.TestCase):
@@ -12,11 +12,13 @@ class TriviaTestCase(unittest.TestCase):
 
     def setUp(self):
         """Define test variables and initialize app."""
+
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_name = "trivia_test"
-        self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
-        setup_db(self.app, self.database_path)
+
+        self.database_path = 'postgresql://test:test@localhost:15432/trivia_test'
+        self.db = setup_db(self.app, self.database_path)
+
 
         # binds the app to the current context
         with self.app.app_context():
@@ -24,7 +26,7 @@ class TriviaTestCase(unittest.TestCase):
             self.db.init_app(self.app)
             # create all tables
             self.db.create_all()
-    
+
     def tearDown(self):
         """Executed after reach test"""
         pass
@@ -33,8 +35,59 @@ class TriviaTestCase(unittest.TestCase):
     TODO
     Write at least one test for each test for successful operation and for expected errors.
     """
+    def test_get_questions(self):
+        response = self.client().get('/questions')
+        response_data = json.loads(response.data)
+        ## Check response
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(response_data['success'], True)
 
+    def test_post_question_create_new_question(self):
+        '#1.Step: Create a new question'
+        new_question = {'answer': 'Green',
+                         'category': 1,
+                         'difficulty': 2,
+                         'question': "Which color has grass?"}
+        '#2.Step: Send new question to database'
+        response = self.client().post('/questions', data=json.dumps(new_question))
+        '#3.Step: Check check the response code'
+        self.assertEqual(response.status_code,200)
+        '#3.Step: Delete the new question from the database'
+        self.db.session.query(Question).filter_by(question="Which color has grass?").delete()
 
-# Make the tests conveniently executable
+    def test_delete_question(self):
+        new_question = {'answer': 'Green',
+                         'category': 1,
+                         'difficulty': 2,
+                         'question': "Which color has grass?"}
+        '#2.Step: Send new question to database'
+        q1=Question(**new_question)
+        self.db.session.add(q1)
+        self.db.session.commit()
+        question_id = self.db.session.query(Question).filter_by(question="Which color has grass?").first().id
+        '#2.Step: Send new question to database'
+        response = self.client().delete(f'/questions/{question_id}')
+        '#3.Step: Check check the response code'
+        self.assertEqual(response.status_code,200)
+
+    def test_get_categories(self):
+        '#1.Step. Request categories'
+        response = self.client().get('/categories/')
+        '#2.Step: Check check the response code'
+        self.assertEqual(response.status_code,200)
+
+    def test_get_all_question_category(self):
+        category_id = self.db.session.query(Question).first().category
+        response = self.client().get(f'/categories/{category_id}/questions')
+        '#2.Step: Check check the response code'
+        self.assertEqual(response.status_code,200)
+
+    def test_get_quiz_questions(self):
+        response = self.client().post('/quizzes',data=json.dumps({"previous_questions":[],"quiz_category":{'id':1}}))
+        '#2.Step: Check check the response code'
+        self.assertEqual(response.status_code, 200)
+    # Make the tests conveniently executable
 if __name__ == "__main__":
-    unittest.main()
+   unittest.main()
+   test = TriviaTestCase()
+   test.setUp()
