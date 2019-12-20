@@ -10,31 +10,27 @@ from backend.models import setup_db, Question, Category
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         """Define test variables and initialize app."""
 
-        self.app = create_app()
-        self.client = self.app.test_client
+        cls.app = create_app()
+        cls.client = cls.app.test_client
 
-        self.database_path = 'postgresql://test:test@localhost:15432/trivia_test'
-        self.db = setup_db(self.app, self.database_path)
-
+        cls.database_path = 'postgresql://test:test@localhost:15432/trivia_test'
+        cls.db = setup_db(cls.app, cls.database_path)
 
         # binds the app to the current context
-        with self.app.app_context():
-            self.db = SQLAlchemy()
-            self.db.init_app(self.app)
+        with cls.app.app_context():
+            cls.db = SQLAlchemy()
+            cls.db.init_app(cls.app)
             # create all tables
-            self.db.create_all()
+            cls.db.create_all()
 
     def tearDown(self):
         """Executed after reach test"""
         pass
 
-    """
-    TODO
-    Write at least one test for each test for successful operation and for expected errors.
-    """
     def test_get_questions(self):
         response = self.client().get('/questions')
         response_data = json.loads(response.data)
@@ -43,6 +39,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(response_data['success'], True)
 
     def test_post_question_create_new_question(self):
+        self.db = setup_db(self.app, self.database_path)
         '#1.Step: Create a new question'
         new_question = {'answer': 'Green',
                          'category': 1,
@@ -56,6 +53,8 @@ class TriviaTestCase(unittest.TestCase):
         self.db.session.query(Question).filter_by(question="Which color has grass?").delete()
 
     def test_delete_question(self):
+
+        self.db = setup_db(self.app, self.database_path)
         new_question = {'answer': 'Green',
                          'category': 1,
                          'difficulty': 2,
@@ -77,6 +76,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(response.status_code,200)
 
     def test_get_all_question_category(self):
+        self.db = setup_db(self.app, self.database_path)
         category_id = self.db.session.query(Question).first().category
         response = self.client().get(f'/categories/{category_id}/questions')
         '#2.Step: Check check the response code'
@@ -89,5 +89,4 @@ class TriviaTestCase(unittest.TestCase):
     # Make the tests conveniently executable
 if __name__ == "__main__":
    unittest.main()
-   test = TriviaTestCase()
-   test.setUp()
+
