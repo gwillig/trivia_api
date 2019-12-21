@@ -76,16 +76,12 @@ def create_app(test_config=None):
         '#1.Step: Get all parameters for the ajax request'
         data_string = request.data
         request_dict = json.loads(data_string)
-        print(request)
         '#2.Step: create a new records a the database and send response back'
-
-        if not 'searchTaerm' in request_dict.keys():
+        if not 'searchTerm' in request_dict.keys():
             try:
                 c1 = Question(**request_dict)
                 db.session.add(c1)
                 db.session.commit()
-                print("New question has been created")
-                print(request_dict)
             except:
                 db.session.rollback()
                 db.session.close()
@@ -214,8 +210,6 @@ def create_app(test_config=None):
         '#1.Step: Get all parametres from the request'
         data_string = request.data
         request_dict = json.loads(data_string)
-        print(data_string)
-        question = db.session.query(Question).first()
         '#2.1.Step: All all question if all is selected'
         category_id = request_dict["quiz_category"]["id"]
         category_typ = db.session.query(Category).filter_by(id=category_id).first().type

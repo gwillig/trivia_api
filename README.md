@@ -42,3 +42,29 @@ The API will return three types of errors:
 * 400 – bad request
 * 404 – resource not found
 * 422 – unprocessable
+
+## Endpoints
+
+### GET/ questions
+1.) If searchTerms is not included in the JSON request parameters
+* General:
+  * This endpoint is used to return a list of questions (the result is paginated  in groups of 10) <br>
+  if searchTerm is not included in the JSON request parameters.  
+ * Sample:
+   * ``` curl http://127.0.0.1:5000/questions```
+2.)  If searchTerms is included in the JSON request parameters
+* General:
+  *   Return a list of questions based on a text query string.
+### POST/quizzes
+* General: 
+  * This endpoint is used to play the quiz game by returning a question for a given category.
+* Sample:
+ ````bash
+curl http://127.0.0.1:5000/quizzes -X POST --data '{"previous_questions": [20, 21], "quiz_category": {"type": "Science", "id": "1"}}'
+curl --header "Content-Type: application/json" --request POST  --data '{"previous_questions": [20, 21], "quiz_category": {"type": "Science", "id": "1"}}'  http://127.0.0.1:5000/quizzes
+
+````
+ ````bash
+curl http://127.0.0.1:5000/question
+
+````
