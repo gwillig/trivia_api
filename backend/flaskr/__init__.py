@@ -77,6 +77,7 @@ def create_app(test_config=None):
         data_string = request.data
         request_dict = json.loads(data_string)
         '#2.Step: create a new records a the database and send response back'
+
         if not 'searchTerm' in request_dict.keys():
             try:
                 c1 = Question(**request_dict)
