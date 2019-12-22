@@ -23,7 +23,7 @@ pip install -r /backend/requirements.txt
 ```
 To run the server, execute:
 ```bash
-python /flaskr/__init__.py
+python backend/flaskr/__init__.py
 ```
 ### Frontend
 
