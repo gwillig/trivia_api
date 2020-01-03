@@ -212,10 +212,10 @@ def create_app(test_config=None):
                     basequey = basequey.filter(Question.id != str(question_id))
                 question: object = basequey.first()
                 if basequey.count() == 0:
-                    question_raw = dict(answer='The Liver', category='1', difficulty=4,
-                                        question=f'All available question of the {category_typ} answered. Please choice '
-                                                 f'other category.')
-                    question = Question(**question_raw)
+                    return jsonify(dict(
+                                        success=True, question={"question": False,"success": True}
+                                        )
+                                   )
         except:
             db.session.rollback()
             abort(400)
