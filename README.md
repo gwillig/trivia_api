@@ -17,7 +17,7 @@ Completing this trivia app will give you the ability to structure plan, implemen
 
 ### Backend
 
-Create a python3 virtual environment. Then install all dependencies by running 
+Create a python3 virtual environment in the folder trivia_api. Then install all dependencies by running 
 ```bash
 pip install -r /backend/requirements.txt
 ```

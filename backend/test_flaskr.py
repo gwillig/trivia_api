@@ -1,10 +1,9 @@
-import os
 import unittest
 import json
 from flask_sqlalchemy import SQLAlchemy
 
-from backend.flaskr import create_app
-from backend.models import setup_db, Question, Category
+from backend.flaskr.__init__ import create_app
+from backend.flaskr.__init__ import setup_db, Question
 
 
 class TriviaTestCase(unittest.TestCase):
@@ -86,6 +85,40 @@ class TriviaTestCase(unittest.TestCase):
         response = self.client().post('/quizzes',data=json.dumps({"previous_questions":[],"quiz_category":{'id':1}}))
         '#2.Step: Check check the response code'
         self.assertEqual(response.status_code, 200)
+
+    def test_404_error(self):
+        # send request
+        response = self.client().get('/categories/100/questions')
+        data = json.loads(response.data)
+
+
+        '#1.Step: Check the error status and msg'
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'resource not found')
+
+    def test_400_error(self):
+        # send request
+        response = self.client().post('/quizzes', data={})
+        data = json.loads(response.data)
+
+
+        '#1.Step: Check the error status and msg'
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'bad request')
+
+    def test_422_error(self):
+        # send request
+        response = self.client().post('/questions',data=json.dumps({"1":1}),content_type='application/json')
+        data = json.loads(response.data)
+
+
+        '#1.Step: Check the error status and msg'
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'The server understands the content type of the request entity')
+
     # Make the tests conveniently executable
 if __name__ == "__main__":
    unittest.main()
