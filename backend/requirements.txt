@@ -20,7 +20,7 @@ Flask-SQLAlchemy==2.4.0
 gast==0.2.0
 grpcio==1.10.0
 hrv==0.1.5
-html5lib==0.9999999
+html5lib==0.999999999
 idna==2.6
 itsdangerous==1.1.0
 Jinja2==2.10.1
